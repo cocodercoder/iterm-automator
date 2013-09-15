@@ -1,38 +1,67 @@
 require File.expand_path('../spec_helper', __FILE__)
 
-describe Consular::ITerm do
+describe ItermAutomator::Iterm do
   before do
-    @core = Consular::ITerm.new File.expand_path('../fixtures/bar.term', __FILE__)
+    @result = ItermAutomator::Iterm.new
   end
 
-  it "should return name of core with #to_s" do
-    assert_equal "Consular::ITerm Mac OSX iTerm2", Consular::ITerm.to_s
+  describe '.new' do
   end
 
-  it "should add itself to Consular cores" do
-    assert_includes Consular.cores, Consular::ITerm
+  describe '.open_window' do
+    it 'opens a new window' do
+      old_count = @result.iterm.terminals.count
+      @result.open_window
+      new_count = @result.iterm.terminals.count
+
+      expect(old_count + 1).to equal(new_count)
+    end
   end
 
-  it "should set ivars on .initialize" do
-    refute_nil @core.instance_variable_get(:@termfile)
-    refute_nil @core.instance_variable_get(:@terminal)
+  describe '.open_tab' do
+    it 'opens a new tab' do
+      old_count = @result.active_window.sessions.count
+      @result.open_tab
+      new_count = @result.active_window.sessions.count
+
+      expect(old_count + 1).to equal(new_count)
+    end
   end
 
-  it "should prepend commands with .prepend_befores" do
-    assert_equal ['ps', 'ls'], @core.prepend_befores(['ls'], ['ps'])
-    assert_equal ['ls'],       @core.prepend_befores(['ls'])
+  describe '.active_tab' do
+    it 'returns current tab' do
+      expect(@result.active_tab).to eq(@result.iterm.current_terminal.current_session)
+    end
   end
 
-  it "should set the title of the tab if one given" do
-    (name = Object.new).expects(:set)
-    (tab = Object.new).stubs(:name).returns(name)
-    @core.set_title('the title', tab)
+  describe '.active_window' do
+    it 'returns current window' do
+      expect(@result.active_window).to eq(@result.iterm.current_terminal)
+    end
   end
 
-  it "should not bother setting the tab title if not one given" do
-    (name = Object.new).expects(:set).never
-    (tab = Object.new).stubs(:name).returns(name)
-    @core.set_title(nil, tab)
+  describe '.iterm' do
+    it 'returns current app instance' do
+      expect(@result.iterm).to eq(Appscript.app('iTerm'))
+    end
   end
 
+  describe '.execute_command' do
+    before(:each) do
+      path = File.expand_path('../../tmp', __FILE__)
+      @file_path = "#{path}/test.txt"
+    end
+
+    after(:each) do
+      if File.file?(@file_path)
+        FileUtils.rm(@file_path)
+      end
+    end
+
+    it 'write text to session' do
+      @result.execute_command("touch #{@file_path}")
+
+      expect(File.file?(@file_path)).to be_true
+    end
+  end
 end
