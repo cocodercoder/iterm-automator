@@ -31,16 +31,21 @@ module ItermAutomator
       active_window.current_session
     end
 
-    def execute_command(command)
-      active_tab.write(text: command)
+    def execute_command(command, context)
+      context ||= active_tab
+      context.write(text: command)
     end
 
     def horizontal_split
       call_ui_action('Shell', nil, 'Split Horizontally with Current Profile')
+
+      active_tab
     end
 
     def vertical_split
       call_ui_action('Shell', nil, 'Split Vertically with Current Profile')
+
+      active_tab
     end
 
     def iterm

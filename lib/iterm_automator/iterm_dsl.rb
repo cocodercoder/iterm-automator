@@ -5,39 +5,52 @@ module ItermAutomator
     end
 
     def window(&block)
-      iterm.open_window
+      context = iterm.open_window
 
-      if block_given?
-        instance_eval &block
-      end
+      # TODO add checking if window opening process is ready
+      sleep(0.1)
+
+      execute_block(context, &block)
     end
 
     def tab(&block)
-      tab = iterm.open_tab
+      context = iterm.open_tab
 
-      if block_given?
-        instance_eval &block
-      end
+      execute_block(context, &block)
     end
 
     def verticle_pane(&block)
-      iterm.vertical_split
+      context = iterm.vertical_split
 
-      if block_given?
-        instance_eval &block
-      end
+      execute_block(context, &block)
     end
 
     def horizontal_pane(&block)
-      iterm.horizontal_split
+      context = iterm.horizontal_split
 
-      if block_given?
-        instance_eval &block
-      end
+      execute_block(context, &block)
     end
 
     def execute(command)
-      iterm.execute_command(command)
+      iterm.execute_command(command, current_context)
+    end
+
+    private
+
+    def execute_block(context, &block)
+      if block_given?
+        contexts.push(context)
+        instance_eval(&block)
+        contexts.pop
+      end
+    end
+
+    def current_context
+      contexts.last
+    end
+
+    def contexts
+      @contexts ||= []
     end
   end
 end
